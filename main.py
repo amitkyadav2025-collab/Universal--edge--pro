@@ -1,15 +1,18 @@
 import os
+from pathlib import Path
 from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
-app = FastAPI(title="Universal Edge Pro API", version="0.1.0")
+app = FastAPI(title="Universal Edge Pro", version="0.2.0")
 
-# Prototype API only. No broker credentials are used or accepted in browser code.
-# Restrict CORS to your published dashboard domain before production use.
+BASE_DIR = Path(__file__).resolve().parent
+DASHBOARD = BASE_DIR / "universal_edge_pro_prototype.html"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your exact dashboard origin for production.
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -17,24 +20,25 @@ app.add_middleware(
 
 @app.get("/")
 def root():
+    if DASHBOARD.exists():
+        return FileResponse(DASHBOARD, media_type="text/html")
     return {
-        "service": "Universal Edge Pro API",
-        "status": "running",
-        "live_market_data": False,
-        "message": "Starter backend only; not connected to Angel One or live prices."
+        "status": "error",
+        "message": "Dashboard HTML file not found."
     }
 
 @app.get("/health")
 def health():
-    return {"ok": True, "time_utc": datetime.now(timezone.utc).isoformat()}
+    return {
+        "ok": True,
+        "time_utc": datetime.now(timezone.utc).isoformat()
+    }
 
 @app.get("/api/status")
 def api_status():
-    # Deliberately does not pretend to provide live data.
-    configured = bool(os.getenv("ANGELONE_API_KEY"))
     return {
         "backend": "ready",
-        "angelone_configured": configured,
+        "angelone_configured": bool(os.getenv("ANGELONE_API_KEY")),
         "live_market_data": False,
-        "note": "Angel One integration is not implemented in this starter."
+        "note": "Live Angel One integration is not implemented yet."
     }
