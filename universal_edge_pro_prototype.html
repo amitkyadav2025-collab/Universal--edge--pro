@@ -1,86 +1,86 @@
 <!doctype html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b1020">
 <title>Universal Edge Pro</title>
 <style>
 :root{--bg:#0b1020;--panel:#121a2e;--line:#26324a;--text:#eef3ff;--muted:#9aa8c2;--blue:#2787ff;--orange:#ff9e3d;--green:#21c58e;--red:#ff5b6e}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
 header{padding:18px 16px 14px;background:linear-gradient(135deg,#13274a,#101629);border-bottom:1px solid var(--line)}
 .brand{font-size:21px;font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px;margin-top:4px}
-main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-select,input,button{font:inherit;border-radius:9px;border:1px solid #35435e;background:#0c1324;color:var(--text);padding:10px}
-select,input{min-width:0}input{flex:1;min-width:135px}button{cursor:pointer;font-weight:700}button.active{background:#1c4d91;border-color:#438ff4}
+main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}select,input,button{font:inherit;border-radius:9px;border:1px solid #35435e;background:#0c1324;color:var(--text);padding:10px}
+select,input{min-width:0}input{flex:1;min-width:135px}button{cursor:pointer;font-weight:700}.tf.active{background:#1c4d91;border-color:#438ff4}
 .label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:9px}
-.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{padding:12px;background:#0c1324;border-radius:10px;border:1px solid var(--line)}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:17px;margin-top:5px}
-.chart{height:260px;position:relative;background:#0a1120;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.chart svg{width:100%;height:100%;display:block}.chart-note{position:absolute;top:9px;left:10px;background:#0b1020d9;border:1px solid var(--line);padding:5px 8px;border-radius:7px;font-size:11px}
-.zonekey{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{padding:12px;border-radius:10px;background:#0c1324;border:1px solid var(--line)}.box strong{font-size:15px}.green{color:var(--green)}.red{color:var(--red)}.blue{color:#61aaff}.orange{color:var(--orange)}
+.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{padding:12px;background:#0c1324;border-radius:10px;border:1px solid var(--line);min-width:0}
+.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:16px;margin-top:5px;overflow-wrap:anywhere}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{padding:12px;border-radius:10px;background:#0c1324;border:1px solid var(--line)}
+.green{color:var(--green)}.red{color:var(--red)}.blue{color:#61aaff}.orange{color:var(--orange)}
 .notice{font-size:12px;line-height:1.5;color:#ffdca8;background:#302416;border:1px solid #76512a;padding:11px;border-radius:10px}
+.status{padding:12px;border-radius:10px;background:#2b2117;border:1px solid #76512a;color:#ffdca8;line-height:1.5}
 footer{color:var(--muted);font-size:11px;text-align:center;padding:4px 0 20px}
-@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}.chart{height:230px}.two{grid-template-columns:1fr}.brand{font-size:19px}}
+@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.brand{font-size:19px}}
 </style>
 </head>
 <body>
-<header><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">Multi-market chart dashboard · Mobile-first prototype</div></header>
+<header><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">NIFTY 50 · Support/Resistance · Signal dashboard</div></header>
 <main>
 <section class="panel">
-<div class="label">Choose market</div>
-<div class="row">
-<select id="market" aria-label="Market">
-<option>NIFTY 50</option><option>SENSEX</option><option>BANK NIFTY</option><option>Stock</option>
-</select>
-<input id="symbol" placeholder="Stock symbol (e.g. RELIANCE)" aria-label="Stock symbol" />
-<button id="apply">Select</button>
-</div>
-<div class="label" style="margin-top:14px">Timeframe</div>
-<div class="pills"><button class="tf" data-tf="5M">5M Entry</button><button class="tf" data-tf="15M">15M Zones</button><button class="tf active" data-tf="1H">1H Trend</button></div>
+ <div class="label">Instrument</div>
+ <div class="row"><select id="market" aria-label="Instrument"><option>NIFTY 50</option></select><button id="refresh" type="button">Status check</button></div>
+ <div class="label" style="margin-top:14px">Timeframe</div>
+ <div class="pills"><button class="tf" data-tf="5M">5M · Entry</button><button class="tf" data-tf="15M">15M · Zones</button><button class="tf active" data-tf="1H">1H · Trend</button></div>
 </section>
 <section class="panel">
-<div class="row" style="justify-content:space-between"><div><div class="label" style="margin:0 0 4px">Selected instrument</div><strong id="title">NIFTY 50 · Demo view</strong></div><span class="pill">● Prototype</span></div>
-<div class="metrics" style="margin-top:12px">
-<div class="metric"><small>Trend (illustrative)</small><strong class="blue" id="trend">Wait / Neutral</strong></div>
-<div class="metric"><small>Support zone</small><strong>Demo level</strong></div>
-<div class="metric"><small>Resistance zone</small><strong>Demo level</strong></div>
-</div>
+ <div class="row" style="justify-content:space-between"><div><div class="label" style="margin:0 0 4px">Selected instrument</div><strong id="title">NIFTY 50 · Live feed not connected</strong></div><span class="pill">● Prototype</span></div>
+ <div class="metrics" style="margin-top:12px">
+  <div class="metric"><small>Market data</small><strong class="orange" id="feed">Not connected</strong></div>
+  <div class="metric"><small>Selected timeframe</small><strong id="tfvalue">1H</strong></div>
+  <div class="metric"><small>Signal state</small><strong class="blue">WAIT</strong></div>
+ </div>
 </section>
 <section class="panel">
-<div class="label">Chart preview · not live market data</div>
-<div class="chart"><div class="chart-note" id="chartnote">NIFTY 50 · 1H · illustrative only</div>
-<svg viewBox="0 0 700 280" preserveAspectRatio="none" role="img" aria-label="Illustrative candlestick chart with support and resistance zones">
-<defs><pattern id="grid" width="70" height="35" patternUnits="userSpaceOnUse"><path d="M 70 0 L 0 0 0 35" fill="none" stroke="#202b40" stroke-width="1"/></pattern></defs>
-<rect width="700" height="280" fill="url(#grid)"/>
-<rect x="0" y="35" width="700" height="43" fill="#ff9e3d" opacity=".17"/><line x1="0" y1="35" x2="700" y2="35" stroke="#ff9e3d" stroke-dasharray="5 5"/><line x1="0" y1="78" x2="700" y2="78" stroke="#ff9e3d" stroke-dasharray="5 5"/>
-<rect x="0" y="202" width="700" height="42" fill="#2787ff" opacity=".19"/><line x1="0" y1="202" x2="700" y2="202" stroke="#2787ff" stroke-dasharray="5 5"/><line x1="0" y1="244" x2="700" y2="244" stroke="#2787ff" stroke-dasharray="5 5"/>
-<g id="candles"></g>
-<line x1="0" y1="143" x2="700" y2="143" stroke="#21c58e" stroke-dasharray="2 5" opacity=".9"/>
-<text x="10" y="28" fill="#ffb86f" font-size="12">SUPPLY / RESISTANCE (DEMO)</text><text x="10" y="265" fill="#69b1ff" font-size="12">DEMAND / SUPPORT (DEMO)</text>
-</svg></div>
-<div class="zonekey"><span><i class="dot" style="background:#2787ff"></i>Support / Demand</span><span><i class="dot" style="background:#ff9e3d"></i>Resistance / Supply</span><span><i class="dot" style="background:#21c58e"></i>Reference line</span></div>
+ <div class="label">Support / Resistance</div>
+ <div class="two">
+  <div class="box"><div class="label">Support</div><strong class="blue">Unavailable</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Live/historical candles required to calculate a level.</p></div>
+  <div class="box"><div class="label">Resistance</div><strong class="orange">Unavailable</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Live/historical candles required to calculate a level.</p></div>
+ </div>
+ <p style="color:var(--muted);font-size:12px;margin-bottom:0">1H: main zones · 15M: intraday zones · 5M: entry setup. These will calculate only after a real data feed is connected.</p>
 </section>
 <section class="panel">
-<div class="label">Signal panel · sample only</div>
-<div class="two">
-<div class="box"><div class="label">Current signal</div><strong id="signal">WAIT — no live data</strong><p style="color:var(--muted);margin-bottom:0;font-size:12px">Wait for trend + zone + candle confirmation.</p></div>
-<div class="box"><div class="label">Candle pattern examples</div><strong>Doji · Engulfing · Shooting Star</strong><p style="color:var(--muted);margin-bottom:0;font-size:12px">Patterns need context; they are not guaranteed signals.</p></div>
-</div>
-<div class="metrics" style="margin-top:10px">
-<div class="metric"><small>Entry</small><strong>—</strong></div><div class="metric"><small>Stop-loss</small><strong>—</strong></div><div class="metric"><small>Target</small><strong>—</strong></div>
-</div>
+ <div class="label">Signal panel</div>
+ <div class="two">
+  <div class="box"><div class="label">Current signal</div><strong class="orange" id="signal">WAIT — no market data</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">No BUY/SELL recommendation is generated while the feed is disconnected.</p></div>
+  <div class="box"><div class="label">Pattern detection</div><strong>Not active yet</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Doji, Hammer, Engulfing, Shooting Star and chart patterns require real candle data.</p></div>
+ </div>
+ <div class="metrics" style="margin-top:10px">
+  <div class="metric"><small>Entry</small><strong>—</strong></div><div class="metric"><small>Stop-loss</small><strong>—</strong></div><div class="metric"><small>Target 1 / 2</small><strong>— / —</strong></div>
+ </div>
 </section>
-<div class="notice"><strong>Important:</strong> This is only a visual prototype. Prices, zones and candles are illustrative, not current prices or trading advice. It is not connected to Angel One or any live feed yet. Do not place trades using this preview. Live data requires a proper market-data connection and a secure hosted backend.</div>
-<footer>Universal Edge Pro · Prototype v0.1 · Manual order placement only</footer>
+<section class="panel">
+ <div class="label">Connection status</div>
+ <div class="status" id="status">Live market data is not connected. This page does not fetch Angel One prices and must not be used to make trades.</div>
+ <p style="color:var(--muted);font-size:12px;margin-bottom:0">Next integration step: connect a secure backend to an authorized market-data feed. Keep API keys, secrets, PINs, passwords and OTPs private; never put them in this HTML file.</p>
+</section>
+<div class="notice"><strong>Important:</strong> This dashboard currently shows status and layout only. It has no live prices, calculated levels, validated BUY/SELL signals, or working targets. Do not use it for trading until the live feed and calculations are implemented and tested. Manual order placement only; no automatic orders.</div>
+<footer>Universal Edge Pro · Prototype v0.2 · Android-friendly</footer>
 </main>
 <script>
-const ns="http://www.w3.org/2000/svg", g=document.getElementById('candles');
-let seed=13;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280}
-let p=135;for(let i=0;i<32;i++){let x=22+i*21,open=p+(rnd()-.5)*20,close=open+(rnd()-.48)*29,high=Math.max(open,close)+rnd()*13,low=Math.min(open,close)-rnd()*13;let up=close>=open,color=up?'#21c58e':'#ff5b6e';let wick=document.createElementNS(ns,'line');wick.setAttribute('x1',x+5);wick.setAttribute('x2',x+5);wick.setAttribute('y1',high);wick.setAttribute('y2',low);wick.setAttribute('stroke',color);wick.setAttribute('stroke-width','1.5');g.appendChild(wick);let body=document.createElementNS(ns,'rect');body.setAttribute('x',x);body.setAttribute('y',Math.min(open,close));body.setAttribute('width',10);body.setAttribute('height',Math.max(3,Math.abs(close-open)));body.setAttribute('fill',color);g.appendChild(body);p=close}
-let tf='1H';document.querySelectorAll('.tf').forEach(b=>b.addEventListener('click',()=>{tf=b.dataset.tf;document.querySelectorAll('.tf').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('chartnote').textContent=current+' · '+tf+' · illustrative only';document.getElementById('trend').textContent=tf==='5M'?'Wait for setup':tf==='15M'?'Zone check':'Wait / Neutral';}));
-let current='NIFTY 50';document.getElementById('apply').addEventListener('click',()=>{let m=document.getElementById('market').value,s=document.getElementById('symbol').value.trim().toUpperCase();current=m==='Stock'?(s||'Enter stock symbol'):m;document.getElementById('title').textContent=current+' · Demo view';document.getElementById('chartnote').textContent=current+' · '+tf+' · illustrative only';});
+let tf='1H';
+document.querySelectorAll('.tf').forEach(b=>b.addEventListener('click',()=>{
+ tf=b.dataset.tf;
+ document.querySelectorAll('.tf').forEach(x=>x.classList.toggle('active',x===b));
+ document.getElementById('tfvalue').textContent=tf;
+ document.getElementById('status').textContent='Selected '+tf+'. Live market data is still not connected; levels and signals remain unavailable.';
+}));
+document.getElementById('refresh').addEventListener('click',()=>{
+ document.getElementById('feed').textContent='Not connected';
+ document.getElementById('signal').textContent='WAIT — no market data';
+ document.getElementById('status').textContent='Status checked: this prototype has no active Angel One market-data connection.';
+});
 </script>
-</body></html>
+</body>
+</html>
