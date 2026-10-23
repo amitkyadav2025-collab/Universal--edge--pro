@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Universal Edge Pro — Demo Chart</title>
+<script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--line:#26324a;--text:#eef3ff;--muted:#9ba9c7;--green:#20c997;--red:#ff647c;--yellow:#f6c85f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:16px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:21px;margin:0}.sub{color:var(--muted);margin:5px 0 14px}.badge{border:1px solid #6a5320;background:#332b17;color:#ffe09a;padding:6px 9px;border-radius:999px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn,select{background:#1a2540;color:var(--text);border:1px solid #344360;border-radius:9px;padding:9px 12px;font:inherit}.btn.active{border-color:#5d8cff;background:#20365d}
+#chart{height:360px;width:100%}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:#0e1628;border-radius:10px;padding:12px}.label{color:var(--muted);font-size:12px}.value{font-size:18px;font-weight:700;margin-top:4px}
+.notice{line-height:1.5;color:#ffe6a6;background:#302817;border:1px solid #6a5320;padding:12px;border-radius:10px}
+.small{font-size:12px;color:var(--muted);line-height:1.5}.footer{color:var(--muted);font-size:12px;text-align:center;margin:18px 0}
+@media(max-width:500px){.wrap{padding:11px}#chart{height:320px}.stats{grid-template-columns:1fr 1fr}.value{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>UNIVERSAL EDGE PRO</h1><span class="badge">DEMO · NOT LIVE</span></div>
+  <div class="sub">NIFTY 50 · Candlestick chart · Support / Resistance layout preview</div>
+  <div class="notice"><b>Demo data only:</b> The candles and levels on this page are generated examples, not current Nifty 50 prices. Do not use them to trade. Live data is not connected.</div>
+  <section class="panel">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <strong>NIFTY 50</strong>
+      <div class="row"><button class="btn active" data-tf="5">5M</button><button class="btn" data-tf="15">15M</button><button class="btn" data-tf="60">1H</button></div>
+    </div>
+    <div id="chart"></div>
+    <div class="small" style="margin-top:9px">Timeframe buttons change the demo candle grouping. Candles are synthetic and are not fetched from Angel One.</div>
+  </section>
+  <section class="panel">
+    <div class="stats">
+      <div class="stat"><div class="label">DATA CONNECTION</div><div class="value" style="color:var(--yellow)">Not connected</div></div>
+      <div class="stat"><div class="label">SIGNAL</div><div class="value">WAIT</div></div>
+      <div class="stat"><div class="label">DEMO SUPPORT</div><div class="value" id="support">—</div></div>
+      <div class="stat"><div class="label">DEMO RESISTANCE</div><div class="value" id="resistance">—</div></div>
+    </div>
+    <p class="small">Support and resistance shown here are calculated from the illustrative candles only. They are not real market levels. BUY/SELL signals, stop-loss and targets remain disabled until an authorized real data feed and tested calculations are implemented.</p>
+  </section>
+  <div class="footer">Universal Edge Pro · Demo chart preview · Manual trading only · No automatic orders</div>
+</div>
+<script>
+(function(){
+ const el=document.getElementById('chart');
+ if(!window.LightweightCharts){el.innerHTML='<p>Chart library could not load. Please open this page with internet access.</p>';return;}
+ const chart=LightweightCharts.createChart(el,{layout:{background:{type:'solid',color:'#121a2e'},textColor:'#c8d3ea'},grid:{vertLines:{color:'#1e2940'},horzLines:{color:'#1e2940'}},rightPriceScale:{borderColor:'#26324a'},timeScale:{borderColor:'#26324a',timeVisible:true,secondsVisible:false},crosshair:{mode:LightweightCharts.CrosshairMode.Normal}});
+ const candles=chart.addCandlestickSeries({upColor:'#20c997',downColor:'#ff647c',borderUpColor:'#20c997',borderDownColor:'#ff647c',wickUpColor:'#20c997',wickDownColor:'#ff647c'});
+ const base=24000; let raw=[]; let p=base;
+ // Deterministic illustrative data: intentionally not a live quote.
+ for(let i=0;i<90;i++){let o=p; let d=Math.sin(i*.73)*13+Math.cos(i*.19)*8+(i%7-3)*1.8;let c=o+d;let h=Math.max(o,c)+4+(i%5)*2;let l=Math.min(o,c)-3-(i%4)*2;p=c;raw.push({time:Math.floor(Date.UTC(2026,9,20,9,15)/1000)+i*300,open:+o.toFixed(2),high:+h.toFixed(2),low:+l.toFixed(2),close:+c.toFixed(2)});}
+ let supportLine,resLine;
+ function render(tf){
+   let data=raw;
+   if(tf===15||tf===60){let step=tf/5;data=[];for(let i=0;i<raw.length;i+=step){let group=raw.slice(i,i+step);if(!group.length)continue;data.push({time:group[0].time,open:group[0].open,high:Math.max(...group.map(x=>x.high)),low:Math.min(...group.map(x=>x.low)),close:group[group.length-1].close});}}
+   candles.setData(data);
+   const lows=data.map(x=>x.low), highs=data.map(x=>x.high);
+   const s=Math.min(...lows.slice(-20)), r=Math.max(...highs.slice(-20));
+   document.getElementById('support').textContent=s.toFixed(2)+' (demo)';
+   document.getElementById('resistance').textContent=r.toFixed(2)+' (demo)';
+   if(supportLine)candles.removePriceLine(supportLine);if(resLine)candles.removePriceLine(resLine);
+   supportLine=candles.createPriceLine({price:s,color:'#20c997',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Demo S'});
+   resLine=candles.createPriceLine({price:r,color:'#ff647c',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Demo R'});
+   chart.timeScale().fitContent();
+ }
+ render(5);
+ document.querySelectorAll('[data-tf]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tf]').forEach(x=>x.classList.remove('active'));b.classList.add('active');render(Number(b.dataset.tf));}));
+ const ro=new ResizeObserver(()=>chart.applyOptions({width:el.clientWidth}));ro.observe(el);
+})();
+</script>
+</body></html>
