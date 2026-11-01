@@ -77,6 +77,9 @@ footer{color:var(--muted);font-size:11px;text-align:center;padding:4px 0 20px}
   <div class="metric"><small>Targets (1R / 2R)</small><strong id="targets">— / —</strong></div>
  </div>
  <p style="color:var(--muted);font-size:11px;margin:10px 0 0">Entry/SL/targets are illustrative calculations from the latest candle and ATR. Confirm independently before any trade.</p>
+ <div class="box" style="margin-top:12px"><div class="label">Historical signals & backtest (loaded candles only)</div>
+  <div class="metrics"><div class="metric"><small>BUY / SELL signals</small><strong id="histSignals">—</strong></div><div class="metric"><small>Backtest trades</small><strong id="btTrades">—</strong></div><div class="metric"><small>Win rate</small><strong id="btWin">—</strong></div><div class="metric"><small>Net R (approx.)</small><strong id="btNet">—</strong></div></div>
+  <p id="btNote" style="color:var(--muted);font-size:12px;margin:8px 0 0">Calculating from historical candles…</p></div>
 </section>
 
 <section class="panel">
@@ -164,31 +167,61 @@ function updateAnalysis(cs){
  $('resistanceNote').textContent='Nearest recent swing high above price.';
  supportLine.applyOptions({price:sup});resistanceLine.applyOptions({price:res});
  const [p,pn]=detectPattern(last,prev);$('pattern').textContent=p;$('patternWhy').textContent=pn;
- let sig='WAIT',why='No clear trend/breakout confirmation.';
- if(e20&&e50&&last.close>e20&&e20>e50&&last.close>prev.high){sig='BUY setup';why='Price above EMA20/EMA50 with candle high breakout (rule-based).';}
- else if(e20&&e50&&last.close<e20&&e20<e50&&last.close<prev.low){sig='SELL setup';why='Price below EMA20/EMA50 with candle low breakdown (rule-based).';}
+ // Less restrictive historical trigger: trend + close crossing prior candle high/low.
+ const signals=[];
+ for(let i=20;i<cs.length;i++){
+  const sub=cs.slice(0,i+1), cc=sub.map(x=>x.close), x=sub.at(-1), pr=sub.at(-2);
+  const fast=ema(cc,20), slow=ema(cc,Math.min(50,cc.length));
+  if(fast==null||slow==null)continue;
+  if(x.close>fast&&fast>=slow&&x.close>pr.high)signals.push({i,time:x.time,side:'BUY'});
+  else if(x.close<fast&&fast<=slow&&x.close<pr.low)signals.push({i,time:x.time,side:'SELL'});
+ }
+ const latest=signals.at(-1);
+ let sig='WAIT',why='No recent breakout signal. Historical signals are shown below.';
+ if(latest&&latest.i===cs.length-1){sig=latest.side+' setup';why=latest.side+' signal: price crossed prior candle extreme with EMA trend confirmation.';}
  $('signal').textContent=sig;
  $('signal').className=sig.startsWith('BUY')?'green':sig.startsWith('SELL')?'red':'orange';
  $('signalWhy').textContent=why;
- const ent=last.close;
- const isBuy=sig.startsWith('BUY'),isSell=sig.startsWith('SELL');
+ const isBuy=sig.startsWith('BUY'),isSell=sig.startsWith('SELL'),ent=last.close;
  const stop=a?(isBuy?ent-a*1.5:ent+a*1.5):null;
  $('entry').textContent=fmt(ent);$('sl').textContent=fmt(stop);
  $('targets').textContent=a?(fmt(isSell?ent-a:ent+a)+' / '+fmt(isSell?ent-2*a:ent+2*a)):'— / —';
- // Remove the previous trade overlay before drawing a new one.
  if(window.tradeLines){window.tradeLines.forEach(line=>{try{series.removePriceLine(line);}catch(e){}});}
  window.tradeLines=[];
  if(a&&(isBuy||isSell)){
-  const t1=isBuy?ent+a:ent-a;
-  const t2=isBuy?ent+2*a:ent-2*a;
+  const t1=isBuy?ent+a:ent-a,t2=isBuy?ent+2*a:ent-2*a;
   window.tradeLines.push(series.createPriceLine({price:ent,color:'#ffffff',lineWidth:2,lineStyle:0,axisLabelVisible:true,title:'ENTRY'}));
   window.tradeLines.push(series.createPriceLine({price:stop,color:'#ff5b6e',lineWidth:2,lineStyle:2,axisLabelVisible:true,title:'STOP LOSS'}));
   window.tradeLines.push(series.createPriceLine({price:t1,color:'#21c58e',lineWidth:2,lineStyle:2,axisLabelVisible:true,title:'TARGET 1'}));
   window.tradeLines.push(series.createPriceLine({price:t2,color:'#00e676',lineWidth:2,lineStyle:0,axisLabelVisible:true,title:'TARGET 2'}));
-  series.setMarkers([{time:last.time,position:isBuy?'belowBar':'aboveBar',color:isBuy?'#21c58e':'#ff5b6e',shape:isBuy?'arrowUp':'arrowDown',text:isBuy?'BUY':'SELL',size:2}]);
- }else{
-  series.setMarkers([]);
  }
+ // Render all historical signal arrows, not only the latest candle.
+ const markers=signals.map(x=>({time:x.time,position:x.side==='BUY'?'belowBar':'aboveBar',color:x.side==='BUY'?'#21c58e':'#ff5b6e',shape:x.side==='BUY'?'arrowUp':'arrowDown',text:x.side,size:1}));
+ series.setMarkers(markers);
+ $('histSignals').textContent=signals.filter(x=>x.side==='BUY').length+' / '+signals.filter(x=>x.side==='SELL').length;
+ // Simple sequential candle backtest: next candle open entry, 1.5 ATR stop, 2 ATR target.
+ let wins=0,losses=0,netR=0,trades=0;
+ for(let k=0;k<signals.length;k++){
+  const sg=signals[k], entryC=cs[sg.i+1]; if(!entryC)continue;
+  const hist=cs.slice(0,sg.i+1), riskAtr=atr(hist); if(!riskAtr||!Number.isFinite(riskAtr))continue;
+  const entry=entryC.open, risk=riskAtr*1.5, target=riskAtr*2, buy=sg.side==='BUY';
+  let outcome=null;
+  for(let j=sg.i+1;j<cs.length;j++){
+    const bar=cs[j];
+    const stopHit=buy?bar.low<=entry-risk:bar.high>=entry+risk;
+    const targetHit=buy?bar.high>=entry+target:bar.low<=entry-target;
+    if(stopHit){outcome=-1;break;} // conservative if stop & target hit same candle
+    if(targetHit){outcome=2/1.5;break;}
+    if(j-sg.i>=20){outcome=0;break;}
+  }
+  if(outcome===null)continue;
+  trades++;netR+=outcome;if(outcome>0)wins++;else if(outcome<0)losses++;
+  k++; // avoid overlapping positions/signals
+ }
+ $('btTrades').textContent=trades+' ('+wins+'W/'+losses+'L)';
+ $('btWin').textContent=trades?((wins/trades)*100).toFixed(1)+'%':'—';
+ $('btNet').textContent=trades?(netR>=0?'+':'')+netR.toFixed(2)+'R':'—';
+ $('btNote').textContent='Approximate candle-based test; next-candle entry, SL 1.5 ATR, TP 2 ATR, max 20 candles. Fees/slippage not included. '+(trades?'':'Not enough completed trades in current history.');
 }
 async function loadData(){
  $('status').textContent='Checking Render backend…';$('feed').textContent='Connecting…';$('feedBadge').textContent='Loading…';
