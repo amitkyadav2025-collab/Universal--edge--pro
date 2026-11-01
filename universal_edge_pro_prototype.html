@@ -146,6 +146,73 @@ function findSwings(cs){
  }
  return {highs,lows};
 }
+let signalLines = [];
+
+function clearSignalLines(){
+ signalLines.forEach(line=>series.removePriceLine(line));
+ signalLines=[];
+}
+
+function drawTradeSignals(candle, signal, entry, stop, target1, target2){
+ clearSignalLines();
+
+ const isBuy=signal.startsWith('BUY');
+ const isSell=signal.startsWith('SELL');
+
+ if(!isBuy && !isSell){
+  series.setMarkers([]);
+  return;
+ }
+
+ // BUY / SELL arrow on candle
+ series.setMarkers([{
+  time:candle.time,
+  position:isBuy?'belowBar':'aboveBar',
+  color:isBuy?'#21c58e':'#ff5b6e',
+  shape:isBuy?'arrowUp':'arrowDown',
+  text:isBuy?'BUY':'SELL'
+ }]);
+
+ // Entry line
+ signalLines.push(series.createPriceLine({
+  price:entry,
+  color:'#ffffff',
+  lineWidth:2,
+  lineStyle:0,
+  axisLabelVisible:true,
+  title:'ENTRY'
+ }));
+
+ // Stop Loss
+ signalLines.push(series.createPriceLine({
+  price:stop,
+  color:'#ff5b6e',
+  lineWidth:2,
+  lineStyle:2,
+  axisLabelVisible:true,
+  title:'STOP LOSS'
+ }));
+
+ // Target 1
+ signalLines.push(series.createPriceLine({
+  price:target1,
+  color:'#21c58e',
+  lineWidth:1,
+  lineStyle:2,
+  axisLabelVisible:true,
+  title:'TARGET 1'
+ }));
+
+ // Target 2
+ signalLines.push(series.createPriceLine({
+  price:target2,
+  color:'#00e676',
+  lineWidth:2,
+  lineStyle:2,
+  axisLabelVisible:true,
+  title:'TARGET 2'
+ }));
+} 
 function updateAnalysis(cs){
  if(cs.length<20)return;
  const closes=cs.map(c=>c.close),last=cs.at(-1),prev=cs.at(-2);
@@ -171,6 +238,29 @@ function updateAnalysis(cs){
  const ent=last.close,stop=a?(sig.startsWith('BUY')?ent-a*1.5:ent+a*1.5):null;
  $('entry').textContent=fmt(ent);$('sl').textContent=fmt(stop);
  $('targets').textContent=a?fmt(sig.startsWith('SELL')?ent-a:ent+a)+' / '+fmt(sig.startsWith('SELL')?ent-2*a:ent+2*a):'— / —';
+}
+ if(a && (sig.startsWith('BUY') || sig.startsWith('SELL')){
+
+ const isBuy=sig.startsWith('BUY');
+
+ const stopPrice=isBuy?ent-a*1.5:ent+a*1.5;
+
+ const target1=isBuy?ent+a:ent-a;
+
+ const target2=isBuy?ent+2*a:ent-2*a;
+
+ drawTradeSignals(
+  last,
+  sig,
+  ent,
+  stopPrice,
+  target1,
+  target2
+ );
+
+}else{
+ clearSignalLines();
+ series.setMarkers([]);
 }
 async function loadData(){
  $('status').textContent='Checking Render backend…';$('feed').textContent='Connecting…';$('feedBadge').textContent='Loading…';
