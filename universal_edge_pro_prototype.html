@@ -146,79 +146,12 @@ function findSwings(cs){
  }
  return {highs,lows};
 }
-let signalLines = [];
-
-function clearSignalLines(){
- signalLines.forEach(line=>series.removePriceLine(line));
- signalLines=[];
-}
-
-function drawTradeSignals(candle, signal, entry, stop, target1, target2){
- clearSignalLines();
-
- const isBuy=signal.startsWith('BUY');
- const isSell=signal.startsWith('SELL');
-
- if(!isBuy && !isSell){
-  series.setMarkers([]);
-  return;
- }
-
- // BUY / SELL arrow on candle
- series.setMarkers([{
-  time:candle.time,
-  position:isBuy?'belowBar':'aboveBar',
-  color:isBuy?'#21c58e':'#ff5b6e',
-  shape:isBuy?'arrowUp':'arrowDown',
-  text:isBuy?'BUY':'SELL'
- }]);
-
- // Entry line
- signalLines.push(series.createPriceLine({
-  price:entry,
-  color:'#ffffff',
-  lineWidth:2,
-  lineStyle:0,
-  axisLabelVisible:true,
-  title:'ENTRY'
- }));
-
- // Stop Loss
- signalLines.push(series.createPriceLine({
-  price:stop,
-  color:'#ff5b6e',
-  lineWidth:2,
-  lineStyle:2,
-  axisLabelVisible:true,
-  title:'STOP LOSS'
- }));
-
- // Target 1
- signalLines.push(series.createPriceLine({
-  price:target1,
-  color:'#21c58e',
-  lineWidth:1,
-  lineStyle:2,
-  axisLabelVisible:true,
-  title:'TARGET 1'
- }));
-
- // Target 2
- signalLines.push(series.createPriceLine({
-  price:target2,
-  color:'#00e676',
-  lineWidth:2,
-  lineStyle:2,
-  axisLabelVisible:true,
-  title:'TARGET 2'
- }));
-} 
 function updateAnalysis(cs){
  if(cs.length<20)return;
  const closes=cs.map(c=>c.close),last=cs.at(-1),prev=cs.at(-2);
  const e20=ema(closes,20),e50=ema(closes,Math.min(50,closes.length)),a=atr(cs);
  $('price').textContent=fmt(last.close);
- const diff=last.close-prev.close, pct=diff/prev.close*100;
+ const diff=last.close-prev.close,pct=diff/prev.close*100;
  $('change').textContent=(diff>=0?'▲ +':'▼ ')+fmt(diff)+' ('+pct.toFixed(2)+'%)';
  $('change').className=diff>=0?'green':'red';
  $('trend').textContent=e20&&e50?(e20>e50?'Bullish ↑':e20<e50?'Bearish ↓':'Sideways'):'Insufficient';
@@ -234,33 +167,28 @@ function updateAnalysis(cs){
  let sig='WAIT',why='No clear trend/breakout confirmation.';
  if(e20&&e50&&last.close>e20&&e20>e50&&last.close>prev.high){sig='BUY setup';why='Price above EMA20/EMA50 with candle high breakout (rule-based).';}
  else if(e20&&e50&&last.close<e20&&e20<e50&&last.close<prev.low){sig='SELL setup';why='Price below EMA20/EMA50 with candle low breakdown (rule-based).';}
- $('signal').textContent=sig;$('signal').className=sig.startsWith('BUY')?'green':sig.startsWith('SELL')?'red':'orange';$('signalWhy').textContent=why;
- const ent=last.close,stop=a?(sig.startsWith('BUY')?ent-a*1.5:ent+a*1.5):null;
+ $('signal').textContent=sig;
+ $('signal').className=sig.startsWith('BUY')?'green':sig.startsWith('SELL')?'red':'orange';
+ $('signalWhy').textContent=why;
+ const ent=last.close;
+ const isBuy=sig.startsWith('BUY'),isSell=sig.startsWith('SELL');
+ const stop=a?(isBuy?ent-a*1.5:ent+a*1.5):null;
  $('entry').textContent=fmt(ent);$('sl').textContent=fmt(stop);
- $('targets').textContent=a?fmt(sig.startsWith('SELL')?ent-a:ent+a)+' / '+fmt(sig.startsWith('SELL')?ent-2*a:ent+2*a):'— / —';
-}
- if(a && (sig.startsWith('BUY') || sig.startsWith('SELL')){
-
- const isBuy=sig.startsWith('BUY');
-
- const stopPrice=isBuy?ent-a*1.5:ent+a*1.5;
-
- const target1=isBuy?ent+a:ent-a;
-
- const target2=isBuy?ent+2*a:ent-2*a;
-
- drawTradeSignals(
-  last,
-  sig,
-  ent,
-  stopPrice,
-  target1,
-  target2
- );
-
-}else{
- clearSignalLines();
- series.setMarkers([]);
+ $('targets').textContent=a?(fmt(isSell?ent-a:ent+a)+' / '+fmt(isSell?ent-2*a:ent+2*a)):'— / —';
+ // Remove the previous trade overlay before drawing a new one.
+ if(window.tradeLines){window.tradeLines.forEach(line=>{try{series.removePriceLine(line);}catch(e){}});}
+ window.tradeLines=[];
+ if(a&&(isBuy||isSell)){
+  const t1=isBuy?ent+a:ent-a;
+  const t2=isBuy?ent+2*a:ent-2*a;
+  window.tradeLines.push(series.createPriceLine({price:ent,color:'#ffffff',lineWidth:2,lineStyle:0,axisLabelVisible:true,title:'ENTRY'}));
+  window.tradeLines.push(series.createPriceLine({price:stop,color:'#ff5b6e',lineWidth:2,lineStyle:2,axisLabelVisible:true,title:'STOP LOSS'}));
+  window.tradeLines.push(series.createPriceLine({price:t1,color:'#21c58e',lineWidth:2,lineStyle:2,axisLabelVisible:true,title:'TARGET 1'}));
+  window.tradeLines.push(series.createPriceLine({price:t2,color:'#00e676',lineWidth:2,lineStyle:0,axisLabelVisible:true,title:'TARGET 2'}));
+  series.setMarkers([{time:last.time,position:isBuy?'belowBar':'aboveBar',color:isBuy?'#21c58e':'#ff5b6e',shape:isBuy?'arrowUp':'arrowDown',text:isBuy?'BUY':'SELL',size:2}]);
+ }else{
+  series.setMarkers([]);
+ }
 }
 async function loadData(){
  $('status').textContent='Checking Render backend…';$('feed').textContent='Connecting…';$('feedBadge').textContent='Loading…';
