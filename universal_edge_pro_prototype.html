@@ -5,82 +5,219 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="theme-color" content="#0b1020">
 <title>Universal Edge Pro</title>
+<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 :root{--bg:#0b1020;--panel:#121a2e;--line:#26324a;--text:#eef3ff;--muted:#9aa8c2;--blue:#2787ff;--orange:#ff9e3d;--green:#21c58e;--red:#ff5b6e}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
-header{padding:18px 16px 14px;background:linear-gradient(135deg,#13274a,#101629);border-bottom:1px solid var(--line)}
+header{padding:17px 16px 14px;background:linear-gradient(135deg,#13274a,#101629);border-bottom:1px solid var(--line)}
 .brand{font-size:21px;font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px;margin-top:4px}
-main{max-width:900px;margin:auto;padding:14px;display:grid;gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}select,input,button{font:inherit;border-radius:9px;border:1px solid #35435e;background:#0c1324;color:var(--text);padding:10px}
-select,input{min-width:0}input{flex:1;min-width:135px}button{cursor:pointer;font-weight:700}.tf.active{background:#1c4d91;border-color:#438ff4}
-.label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:9px}
-.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{padding:12px;background:#0c1324;border-radius:10px;border:1px solid var(--line);min-width:0}
+main{max-width:980px;margin:auto;padding:12px;display:grid;gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+select,button{font:inherit;border-radius:9px;border:1px solid #35435e;background:#0c1324;color:var(--text);padding:9px 11px}
+button{cursor:pointer;font-weight:700}.tf.active{background:#1c4d91;border-color:#438ff4}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:8px}
+.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{padding:6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{padding:10px;background:#0c1324;border-radius:10px;border:1px solid var(--line);min-width:0}
 .metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:16px;margin-top:5px;overflow-wrap:anywhere}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{padding:12px;border-radius:10px;background:#0c1324;border:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{padding:11px;border-radius:10px;background:#0c1324;border:1px solid var(--line)}
 .green{color:var(--green)}.red{color:var(--red)}.blue{color:#61aaff}.orange{color:var(--orange)}
 .notice{font-size:12px;line-height:1.5;color:#ffdca8;background:#302416;border:1px solid #76512a;padding:11px;border-radius:10px}
-.status{padding:12px;border-radius:10px;background:#2b2117;border:1px solid #76512a;color:#ffdca8;line-height:1.5}
+.status{padding:11px;border-radius:10px;background:#2b2117;border:1px solid #76512a;color:#ffdca8;line-height:1.5}
+#chart{height:330px;width:100%;margin-top:8px}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
 footer{color:var(--muted);font-size:11px;text-align:center;padding:4px 0 20px}
-@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.brand{font-size:19px}}
+@media(max-width:480px){.metrics{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.brand{font-size:19px}#chart{height:280px}}
 </style>
 </head>
 <body>
-<header><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">NIFTY 50 · Support/Resistance · Signal dashboard</div></header>
+<header><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">NIFTY 50 · Chart · Zones · Technical signals</div></header>
 <main>
 <section class="panel">
- <div class="label">Instrument</div>
- <div class="row"><select id="market" aria-label="Instrument"><option>NIFTY 50</option></select><button id="refresh" type="button">Status check</button></div>
- <div class="label" style="margin-top:14px">Timeframe</div>
- <div class="pills"><button class="tf" data-tf="5M">5M · Entry</button><button class="tf" data-tf="15M">15M · Zones</button><button class="tf active" data-tf="1H">1H · Trend</button></div>
-</section>
-<section class="panel">
- <div class="row" style="justify-content:space-between"><div><div class="label" style="margin:0 0 4px">Selected instrument</div><strong id="title">NIFTY 50 · Live feed not connected</strong></div><span class="pill">● Prototype</span></div>
- <div class="metrics" style="margin-top:12px">
-  <div class="metric"><small>Market data</small><strong class="orange" id="feed">Not connected</strong></div>
-  <div class="metric"><small>Selected timeframe</small><strong id="tfvalue">1H</strong></div>
-  <div class="metric"><small>Signal state</small><strong class="blue">WAIT</strong></div>
+ <div class="row">
+  <div><div class="label">Instrument</div><select id="market"><option value="NIFTY 50">NIFTY 50</option></select></div>
+  <div><div class="label">Chart timeframe</div><div class="pills">
+   <button class="tf" data-tf="5M">5M</button><button class="tf active" data-tf="15M">15M</button><button class="tf" data-tf="1H">1H</button>
+  </div></div>
+  <button id="refresh">↻ Refresh</button>
  </div>
 </section>
+
 <section class="panel">
- <div class="label">Support / Resistance</div>
- <div class="two">
-  <div class="box"><div class="label">Support</div><strong class="blue">Unavailable</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Live/historical candles required to calculate a level.</p></div>
-  <div class="box"><div class="label">Resistance</div><strong class="orange">Unavailable</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Live/historical candles required to calculate a level.</p></div>
- </div>
- <p style="color:var(--muted);font-size:12px;margin-bottom:0">1H: main zones · 15M: intraday zones · 5M: entry setup. These will calculate only after a real data feed is connected.</p>
+ <div class="row"><div><div class="label">NIFTY 50 · Angel One SmartAPI backend</div><strong id="price" style="font-size:22px">—</strong> <span id="change" class="muted"></span></div><span id="feedBadge" class="pill">Checking feed…</span></div>
+ <div id="chart"></div>
+ <div class="legend"><span>🟩 Bullish candle</span><span>🟥 Bearish candle</span><span>Blue: Support</span><span>Orange: Resistance</span></div>
 </section>
+
 <section class="panel">
- <div class="label">Signal panel</div>
+ <div class="label">Market snapshot</div>
+ <div class="metrics">
+  <div class="metric"><small>Feed</small><strong id="feed" class="orange">Checking…</strong></div>
+  <div class="metric"><small>Timeframe</small><strong id="tfvalue">15M</strong></div>
+  <div class="metric"><small>Trend (EMA 20/50)</small><strong id="trend">—</strong></div>
+ </div>
+</section>
+
+<section class="panel">
+ <div class="label">Support / Resistance · recent swing zones</div>
  <div class="two">
-  <div class="box"><div class="label">Current signal</div><strong class="orange" id="signal">WAIT — no market data</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">No BUY/SELL recommendation is generated while the feed is disconnected.</p></div>
-  <div class="box"><div class="label">Pattern detection</div><strong>Not active yet</strong><p style="color:var(--muted);font-size:12px;margin-bottom:0">Doji, Hammer, Engulfing, Shooting Star and chart patterns require real candle data.</p></div>
+  <div class="box"><div class="label">Support</div><strong class="blue" id="support">—</strong><p id="supportNote" style="color:var(--muted);font-size:12px;margin-bottom:0">Waiting for candle data.</p></div>
+  <div class="box"><div class="label">Resistance</div><strong class="orange" id="resistance">—</strong><p id="resistanceNote" style="color:var(--muted);font-size:12px;margin-bottom:0">Waiting for candle data.</p></div>
+ </div>
+ <p style="color:var(--muted);font-size:12px;margin-bottom:0">Zones are estimated from recent candle swing highs/lows, not guaranteed levels.</p>
+</section>
+
+<section class="panel">
+ <div class="label">Technical signal (rule-based, not a recommendation)</div>
+ <div class="two">
+  <div class="box"><div class="label">Setup</div><strong id="signal" class="orange">WAIT · data loading</strong><p id="signalWhy" style="color:var(--muted);font-size:12px;margin-bottom:0">Signals need valid candles.</p></div>
+  <div class="box"><div class="label">Latest candle pattern</div><strong id="pattern">—</strong><p id="patternWhy" style="color:var(--muted);font-size:12px;margin-bottom:0">Pattern recognition will appear here.</p></div>
  </div>
  <div class="metrics" style="margin-top:10px">
-  <div class="metric"><small>Entry</small><strong>—</strong></div><div class="metric"><small>Stop-loss</small><strong>—</strong></div><div class="metric"><small>Target 1 / 2</small><strong>— / —</strong></div>
+  <div class="metric"><small>Reference entry</small><strong id="entry">—</strong></div>
+  <div class="metric"><small>ATR-based stop</small><strong id="sl">—</strong></div>
+  <div class="metric"><small>Targets (1R / 2R)</small><strong id="targets">— / —</strong></div>
  </div>
+ <p style="color:var(--muted);font-size:11px;margin:10px 0 0">Entry/SL/targets are illustrative calculations from the latest candle and ATR. Confirm independently before any trade.</p>
 </section>
+
 <section class="panel">
- <div class="label">Connection status</div>
- <div class="status" id="status">Live market data is not connected. This page does not fetch Angel One prices and must not be used to make trades.</div>
- <p style="color:var(--muted);font-size:12px;margin-bottom:0">Next integration step: connect a secure backend to an authorized market-data feed. Keep API keys, secrets, PINs, passwords and OTPs private; never put them in this HTML file.</p>
+ <div class="label">Connection / diagnostics</div>
+ <div class="status" id="status">Connecting to backend…</div>
+ <p style="color:var(--muted);font-size:12px;margin-bottom:0">This page calls your Render backend at <code>/api/status</code>, <code>/api/nifty</code>, and <code>/api/candles</code>. Keep API key, PIN, TOTP secret and OTP in Render Environment only—never in this HTML.</p>
 </section>
-<div class="notice"><strong>Important:</strong> This dashboard currently shows status and layout only. It has no live prices, calculated levels, validated BUY/SELL signals, or working targets. Do not use it for trading until the live feed and calculations are implemented and tested. Manual order placement only; no automatic orders.</div>
-<footer>Universal Edge Pro · Prototype v0.2 · Android-friendly</footer>
+<div class="notice"><strong>Risk notice:</strong> Technical signals can be wrong, especially in volatile markets. This dashboard is an analysis aid, not financial advice. No orders are placed automatically; you place orders manually. If the feed is disconnected or stale, do not use displayed analysis for trading.</div>
+<footer>Universal Edge Pro · Mobile Dashboard · Manual orders only</footer>
 </main>
+
 <script>
-let tf='1H';
+const $=id=>document.getElementById(id);
+let tf='15M', candles=[], chart, series, supportLine, resistanceLine;
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+function initChart(){
+ const el=$('chart');
+ chart=LightweightCharts.createChart(el,{
+  width:el.clientWidth,height:el.clientHeight,
+  layout:{background:{type:'solid',color:'#0c1324'},textColor:'#9aa8c2'},
+  grid:{vertLines:{color:'#172239'},horzLines:{color:'#172239'}},
+  rightPriceScale:{borderColor:'#26324a'},
+  timeScale:{borderColor:'#26324a',timeVisible:true,secondsVisible:false},
+  crosshair:{mode:LightweightCharts.CrosshairMode.Normal}
+ });
+ series=chart.addCandlestickSeries({
+  upColor:'#21c58e',downColor:'#ff5b6e',borderUpColor:'#21c58e',borderDownColor:'#ff5b6e',
+  wickUpColor:'#21c58e',wickDownColor:'#ff5b6e'
+ });
+ supportLine=series.createPriceLine({price:0,color:'#2787ff',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Support'});
+ resistanceLine=series.createPriceLine({price:0,color:'#ff9e3d',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Resistance'});
+ new ResizeObserver(()=>chart.applyOptions({width:el.clientWidth,height:el.clientHeight})).observe(el);
+}
+function ema(values,period){
+ if(values.length<period)return null;
+ const k=2/(period+1);let v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+ for(let i=period;i<values.length;i++)v=values[i]*k+v*(1-k);
+ return v;
+}
+function atr(cs,period=14){
+ if(cs.length<period+1)return null;
+ const trs=[];
+ for(let i=1;i<cs.length;i++){
+  const c=cs[i],p=cs[i-1];
+  trs.push(Math.max(c.high-c.low,Math.abs(c.high-p.close),Math.abs(c.low-p.close)));
+ }
+ return trs.slice(-period).reduce((a,b)=>a+b,0)/period;
+}
+function detectPattern(c,prev){
+ const body=Math.abs(c.close-c.open),range=c.high-c.low||0.00001;
+ const upper=c.high-Math.max(c.open,c.close),lower=Math.min(c.open,c.close)-c.low;
+ if(body/range<0.1)return ['Doji','Small body; indecision candle.'];
+ if(lower>body*2&&upper<body&&c.close>=c.open)return ['Hammer-like','Long lower wick; possible bullish rejection.'];
+ if(upper>body*2&&lower<body&&c.close<=c.open)return ['Shooting Star-like','Long upper wick; possible bearish rejection.'];
+ if(prev){
+  if(c.close>c.open&&prev.close<prev.open&&c.open<=prev.close&&c.close>=prev.open)return ['Bullish Engulfing','Current bullish body engulfs prior bearish body.'];
+  if(c.close< c.open&&prev.close>prev.open&&c.open>=prev.close&&c.close<=prev.open)return ['Bearish Engulfing','Current bearish body engulfs prior bullish body.'];
+ }
+ return ['No clear pattern','No selected candle pattern detected.'];
+}
+function findSwings(cs){
+ const highs=[],lows=[];
+ for(let i=2;i<cs.length-2;i++){
+  const c=cs[i];
+  if(c.high>cs[i-1].high&&c.high>cs[i-2].high&&c.high>=cs[i+1].high&&c.high>=cs[i+2].high)highs.push(c.high);
+  if(c.low<cs[i-1].low&&c.low<cs[i-2].low&&c.low<=cs[i+1].low&&c.low<=cs[i+2].low)lows.push(c.low);
+ }
+ return {highs,lows};
+}
+function updateAnalysis(cs){
+ if(cs.length<20)return;
+ const closes=cs.map(c=>c.close),last=cs.at(-1),prev=cs.at(-2);
+ const e20=ema(closes,20),e50=ema(closes,Math.min(50,closes.length)),a=atr(cs);
+ $('price').textContent=fmt(last.close);
+ const diff=last.close-prev.close, pct=diff/prev.close*100;
+ $('change').textContent=(diff>=0?'▲ +':'▼ ')+fmt(diff)+' ('+pct.toFixed(2)+'%)';
+ $('change').className=diff>=0?'green':'red';
+ $('trend').textContent=e20&&e50?(e20>e50?'Bullish ↑':e20<e50?'Bearish ↓':'Sideways'):'Insufficient';
+ $('trend').className=e20&&e50?(e20>e50?'green':e20<e50?'red':'orange'):'orange';
+ const sw=findSwings(cs.slice(-80));
+ const sup=sw.lows.filter(x=>x<last.close).sort((a,b)=>b-a)[0]??Math.min(...cs.slice(-20).map(c=>c.low));
+ const res=sw.highs.filter(x=>x>last.close).sort((a,b)=>a-b)[0]??Math.max(...cs.slice(-20).map(c=>c.high));
+ $('support').textContent=fmt(sup);$('resistance').textContent=fmt(res);
+ $('supportNote').textContent='Nearest recent swing low below price.';
+ $('resistanceNote').textContent='Nearest recent swing high above price.';
+ supportLine.applyOptions({price:sup});resistanceLine.applyOptions({price:res});
+ const [p,pn]=detectPattern(last,prev);$('pattern').textContent=p;$('patternWhy').textContent=pn;
+ let sig='WAIT',why='No clear trend/breakout confirmation.';
+ if(e20&&e50&&last.close>e20&&e20>e50&&last.close>prev.high){sig='BUY setup';why='Price above EMA20/EMA50 with candle high breakout (rule-based).';}
+ else if(e20&&e50&&last.close<e20&&e20<e50&&last.close<prev.low){sig='SELL setup';why='Price below EMA20/EMA50 with candle low breakdown (rule-based).';}
+ $('signal').textContent=sig;$('signal').className=sig.startsWith('BUY')?'green':sig.startsWith('SELL')?'red':'orange';$('signalWhy').textContent=why;
+ const ent=last.close,stop=a?(sig.startsWith('BUY')?ent-a*1.5:ent+a*1.5):null;
+ $('entry').textContent=fmt(ent);$('sl').textContent=fmt(stop);
+ $('targets').textContent=a?fmt(sig.startsWith('SELL')?ent-a:ent+a)+' / '+fmt(sig.startsWith('SELL')?ent-2*a:ent+2*a):'— / —';
+}
+async function loadData(){
+ $('status').textContent='Checking Render backend…';$('feed').textContent='Connecting…';$('feedBadge').textContent='Loading…';
+ try{
+  const st=await fetch('/api/status',{cache:'no-store'});if(!st.ok)throw Error('Backend status HTTP '+st.status);
+  const status=await st.json();
+  if(!status.angelone_configured){
+   $('feed').textContent='Not configured';$('feed').className='red';$('feedBadge').textContent='Offline';
+   $('status').textContent='Backend is running, but Angel One credentials are not configured in Render. Live price/candles cannot load yet. Do not treat chart or signals as live.';
+   $('price').textContent='—';return;
+  }
+  if(tf==='5M'){
+   $('feed').textContent='5M unavailable';$('feed').className='orange';$('feedBadge').textContent='Timeframe unavailable';
+   $('status').textContent='Current backend provides 15-minute candles only. 5-minute data needs a separate authorized endpoint implementation.';
+   return;
+  }
+  const days=tf==='1H'?15:5;
+  const r=await fetch('/api/candles?days='+days,{cache:'no-store'});
+  if(!r.ok){const j=await r.json().catch(()=>({detail:'Candle request failed'}));throw Error(j.detail||'HTTP '+r.status);}
+  const j=await r.json();
+  const raw=j.candles||[];
+  candles=raw.map(x=>({time:Math.floor(new Date(x[0]).getTime()/1000),open:+x[1],high:+x[2],low:+x[3],close:+x[4]}))
+    .filter(c=>Number.isFinite(c.time)&&Number.isFinite(c.open)&&Number.isFinite(c.high)&&Number.isFinite(c.low)&&Number.isFinite(c.close))
+    .sort((a,b)=>a.time-b.time);
+  if(tf==='1H'){
+   const grouped={};
+   candles.forEach(c=>{const d=new Date(c.time*1000);const key=Math.floor(c.time/3600)*3600;
+    if(!grouped[key])grouped[key]={time:key,open:c.open,high:c.high,low:c.low,close:c.close};
+    else{grouped[key].high=Math.max(grouped[key].high,c.high);grouped[key].low=Math.min(grouped[key].low,c.low);grouped[key].close=c.close;}
+   });
+   candles=Object.values(grouped).sort((a,b)=>a.time-b.time);
+  }
+  if(!candles.length)throw Error('No valid candles returned.');
+  series.setData(candles);chart.timeScale().fitContent();updateAnalysis(candles);
+  $('feed').textContent='Connected';$('feed').className='green';$('feedBadge').textContent='Angel One · Data';
+  $('status').textContent='Candle data received from backend. Check last candle timestamp and market session; rule-based outputs are not guaranteed.';
+ }catch(e){
+  $('feed').textContent='Error';$('feed').className='red';$('feedBadge').textContent='Request failed';
+  $('status').textContent='Could not load data: '+e.message+'. Check Render logs and Angel One API configuration.';
+ }
+}
 document.querySelectorAll('.tf').forEach(b=>b.addEventListener('click',()=>{
- tf=b.dataset.tf;
- document.querySelectorAll('.tf').forEach(x=>x.classList.toggle('active',x===b));
- document.getElementById('tfvalue').textContent=tf;
- document.getElementById('status').textContent='Selected '+tf+'. Live market data is still not connected; levels and signals remain unavailable.';
+ tf=b.dataset.tf;document.querySelectorAll('.tf').forEach(x=>x.classList.toggle('active',x===b));
+ $('tfvalue').textContent=tf;loadData();
 }));
-document.getElementById('refresh').addEventListener('click',()=>{
- document.getElementById('feed').textContent='Not connected';
- document.getElementById('signal').textContent='WAIT — no market data';
- document.getElementById('status').textContent='Status checked: this prototype has no active Angel One market-data connection.';
-});
+$('refresh').addEventListener('click',loadData);
+initChart();loadData();
 </script>
 </body>
 </html>
