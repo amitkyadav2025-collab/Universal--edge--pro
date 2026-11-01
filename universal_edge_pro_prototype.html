@@ -177,18 +177,10 @@ async function loadData(){
  try{
   const st=await fetch('/api/status',{cache:'no-store'});if(!st.ok)throw Error('Backend status HTTP '+st.status);
   const status=await st.json();
-  if(!status.angelone_configured){
-   $('feed').textContent='Not configured';$('feed').className='red';$('feedBadge').textContent='Offline';
-   $('status').textContent='Backend is running, but Angel One credentials are not configured in Render. Live price/candles cannot load yet. Do not treat chart or signals as live.';
-   $('price').textContent='—';return;
-  }
-  if(tf==='5M'){
-   $('feed').textContent='5M unavailable';$('feed').className='orange';$('feedBadge').textContent='Timeframe unavailable';
-   $('status').textContent='Current backend provides 15-minute candles only. 5-minute data needs a separate authorized endpoint implementation.';
-   return;
-  }
+  const provider=status.data_provider||'Market data';
+  const interval=tf==='5M'?'5m':tf==='1H'?'1h':'15m';
   const days=tf==='1H'?15:5;
-  const r=await fetch('/api/candles?days='+days,{cache:'no-store'});
+  const r=await fetch('/api/candles?days='+days+'&interval='+interval,{cache:'no-store'});
   if(!r.ok){const j=await r.json().catch(()=>({detail:'Candle request failed'}));throw Error(j.detail||'HTTP '+r.status);}
   const j=await r.json();
   const raw=j.candles||[];
@@ -205,7 +197,7 @@ async function loadData(){
   }
   if(!candles.length)throw Error('No valid candles returned.');
   series.setData(candles);chart.timeScale().fitContent();updateAnalysis(candles);
-  $('feed').textContent='Connected';$('feed').className='green';$('feedBadge').textContent='Angel One · Data';
+  $('feed').textContent='Connected';$('feed').className='green';$('feedBadge').textContent=provider+' · Data';
   $('status').textContent='Candle data received from backend. Check last candle timestamp and market session; rule-based outputs are not guaranteed.';
  }catch(e){
   $('feed').textContent='Error';$('feed').className='red';$('feedBadge').textContent='Request failed';
