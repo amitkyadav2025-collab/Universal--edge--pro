@@ -1,23 +1,203 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#0b1020"><title>Universal Edge Pro</title><script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script><style>
-:root{--bg:#0b1020;--panel:#121a2e;--line:#26324a;--text:#eef3ff;--muted:#9aa8c4;--green:#20c997;--red:#ff5b6e;--blue:#55aaff;--orange:#ffad42}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.wrap{max-width:1100px;margin:auto;padding:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.brand{font-size:20px;font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.label{color:var(--muted);font-size:12px}select,input,button{background:#17223a;color:var(--text);border:1px solid #34435f;border-radius:8px;padding:9px;font:inherit}button{cursor:pointer}button.active{background:#25466b;border-color:#55aaff}button.primary{background:#176b55;border-color:#20c997}.price{font-size:25px;font-weight:800}.green{color:var(--green)}.red{color:var(--red)}#chart{height:480px;width:100%}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.stat{background:#0e1729;border:1px solid var(--line);padding:10px;border-radius:8px}.stat b{display:block;font-size:17px;margin-top:4px}.pill{border-radius:20px;padding:4px 9px;background:#26344e;font-size:12px}.notice{color:var(--muted);font-size:11px;line-height:1.5}.searchbox{min-width:150px;max-width:220px}.signals{max-height:240px;overflow:auto;font-size:12px}.signalrow{padding:6px;border-bottom:1px solid var(--line)}@media(max-width:600px){.wrap{padding:8px}.panel{padding:10px}#chart{height:65vh;min-height:400px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.brand{font-size:18px}}
-</style></head><body><div class="wrap"><header class="top"><div><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">Chart · Zones · Technical signals · Manual orders only</div></div><span id="feed" class="pill">Connecting…</span></header>
-<section class="panel"><div class="row"><label class="label">Instrument</label><select id="market"><option>NIFTY 50</option><option>BANK NIFTY</option><option>SENSEX</option></select><input id="stock" class="searchbox" placeholder="NSE stock e.g. RELIANCE"/><button id="loadStock">Load stock</button><label class="label">Timeframe</label><button data-tf="5m">5M</button><button data-tf="15m" class="active">15M</button><button data-tf="1h">1H</button><button id="refresh" class="primary">↻ Refresh</button><button id="fit">Fit chart</button><button id="fullscreen">⛶ Full chart</button></div><div class="row" style="margin-top:8px"><div><div class="sub" id="title">NIFTY 50 · Yahoo Finance (unofficial)</div><div class="price" id="price">—</div></div><div class="sub" id="stamp">Checking feed…</div></div></section>
-<section class="panel"><div class="row"><span class="pill">🟩 Bullish candle</span><span class="pill">🟥 Bearish candle</span><span class="pill">Blue: Support</span><span class="pill">Orange: Resistance</span></div><div id="chart"></div><div class="notice">Drag to scroll · Pinch or mouse-wheel to zoom. Auto refresh: 5 sec. Yahoo data can be delayed; polling is not exchange real-time ticks. If a selected symbol is unsupported by backend/Yahoo, feed will show unavailable.</div></section>
-<section class="panel"><div class="stats"><div class="stat"><span class="label">Feed</span><b id="feedstat">Checking…</b></div><div class="stat"><span class="label">Timeframe</span><b id="tfstat">15M</b></div><div class="stat"><span class="label">Trend EMA 20/50</span><b id="trend">—</b></div><div class="stat"><span class="label">Signal</span><b id="setup">WAIT</b></div><div class="stat"><span class="label">Support</span><b id="support">—</b></div><div class="stat"><span class="label">Resistance</span><b id="resistance">—</b></div><div class="stat"><span class="label">Pattern</span><b id="pattern">—</b></div><div class="stat"><span class="label">ATR Stop / Targets</span><b id="risk">—</b></div></div></section>
-<section class="panel"><b>Historical signals & backtest (loaded candles)</b><div class="stats" style="margin-top:8px"><div class="stat"><span class="label">BUY / SELL signals</span><b id="count">—</b></div><div class="stat"><span class="label">Backtest trades</span><b id="trades">—</b></div><div class="stat"><span class="label">Win rate</span><b id="win">—</b></div><div class="stat"><span class="label">Net R approx.</span><b id="netr">—</b></div></div><div id="signals" class="signals"></div></section>
-<section class="panel"><b>Connection / diagnostics</b><div id="diag" class="notice">Connecting to backend…</div><div class="notice">Risk notice: Technical signals can be wrong, especially in volatile markets. Analysis aid only, not financial advice. No orders are placed automatically. If feed is disconnected or stale, do not trade using displayed analysis.</div></section><footer class="sub" style="text-align:center;padding:10px">Universal Edge Pro · Mobile Dashboard · Manual orders only</footer></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Universal Edge Pro</title>
+<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--line:#26324a;--text:#eef3ff;--muted:#9aa8c4;--green:#20c997;--red:#ff5b6e;--blue:#55aaff;--orange:#ffad42}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand{font-size:20px;font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.label{color:var(--muted);font-size:12px}
+select,input,button{background:#17223a;color:var(--text);border:1px solid #34435f;border-radius:8px;padding:9px;font:inherit}button{cursor:pointer}button.active{background:#25466b;border-color:#55aaff}button.primary{background:#176b55;border-color:#20c997}
+.price{font-size:25px;font-weight:800}.green{color:var(--green)}.red{color:var(--red)}
+#chart{height:520px;width:100%}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat{background:#0e1729;border:1px solid var(--line);padding:10px;border-radius:8px}.stat b{display:block;font-size:17px;margin-top:4px}
+.pill{border-radius:20px;padding:4px 9px;background:#26344e;font-size:12px}.notice{color:var(--muted);font-size:11px;line-height:1.5}
+.searchbox{min-width:150px;max-width:220px}.signals{max-height:240px;overflow:auto;font-size:12px}.signalrow{padding:6px;border-bottom:1px solid var(--line)}
+@media(max-width:600px){.wrap{padding:8px}.panel{padding:10px}#chart{height:70vh;min-height:430px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.brand{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><div class="brand">⚡ UNIVERSAL EDGE PRO</div><div class="sub">Chart · Zones · Technical signals · Manual orders only</div></div><span id="feed" class="pill">Connecting…</span></header>
+<section class="panel">
+<div class="row"><label class="label">Instrument</label><select id="market"><option>NIFTY 50</option><option>BANK NIFTY</option><option>SENSEX</option></select>
+<input id="stock" class="searchbox" placeholder="NSE stock e.g. RELIANCE"/><button id="loadStock">Load stock</button>
+<label class="label">Timeframe</label><button data-tf="5m">5M</button><button data-tf="15m" class="active">15M</button><button data-tf="1h">1H</button><button id="refresh" class="primary">↻ Refresh</button><button id="fit">Fit chart</button>
+</div>
+<div class="row" style="margin-top:8px"><div><div class="sub" id="title">NIFTY 50 · Yahoo Finance (unofficial)</div><div class="price" id="price">—</div></div><div class="sub" id="stamp">Checking feed…</div></div>
+</section>
+<section class="panel"><div class="row"><span class="pill">🟩 Bullish candle</span><span class="pill">🟥 Bearish candle</span><span class="pill">Blue: Support</span><span class="pill">Orange: Resistance</span></div><div id="chart"></div><div class="notice">Drag to scroll · Pinch or mouse-wheel to zoom. Refresh every 15 seconds; data may be delayed and is not guaranteed exchange-real-time.</div></section>
+<section class="panel"><div class="stats">
+<div class="stat"><span class="label">Feed</span><b id="feedstat">Checking…</b></div><div class="stat"><span class="label">Timeframe</span><b id="tfstat">15M</b></div>
+<div class="stat"><span class="label">Trend EMA 20/50</span><b id="trend">—</b></div><div class="stat"><span class="label">Signal</span><b id="setup">WAIT</b></div>
+<div class="stat"><span class="label">Support</span><b id="support">—</b></div><div class="stat"><span class="label">Resistance</span><b id="resistance">—</b></div>
+<div class="stat"><span class="label">Pattern</span><b id="pattern">—</b></div><div class="stat"><span class="label">ATR Stop / Targets</span><b id="risk">—</b></div>
+</div></section>
+<section class="panel"><b>Historical signals & backtest (loaded candles)</b><div class="stats" style="margin-top:8px">
+<div class="stat"><span class="label">BUY / SELL signals</span><b id="count">—</b></div><div class="stat"><span class="label">Backtest trades</span><b id="trades">—</b></div>
+<div class="stat"><span class="label">Win rate</span><b id="win">—</b></div><div class="stat"><span class="label">Net R approx.</span><b id="netr">—</b></div></div><div id="signals" class="signals"></div></section>
+<section class="panel"><b>Connection / diagnostics</b><div id="diag" class="notice">Connecting to backend…</div><div class="notice">Risk notice: Signals are rule-based and can be wrong. Analysis aid only, not financial advice. No orders are placed automatically. If feed is disconnected or stale, do not trade using displayed analysis.</div></section>
+<footer class="sub" style="text-align:center;padding:10px">Universal Edge Pro · Mobile Dashboard · Manual orders only</footer>
+</div>
 <script>
-const API='';let tf='15m',symbol='NIFTY 50',candles=[],chart,series,supportLine,resistanceLine,markers=[];const $=id=>document.getElementById(id);const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
-chart=LightweightCharts.createChart($('chart'),{layout:{background:{color:'#121a2e'},textColor:'#dbe6ff'},grid:{vertLines:{color:'#1d2940'},horzLines:{color:'#1d2940'}},rightPriceScale:{borderColor:'#34435f'},timeScale:{borderColor:'#34435f',timeVisible:true,secondsVisible:false},crosshair:{mode:1},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true},handleScale:{mouseWheel:true,pinch:true}});series=chart.addCandlestickSeries({upColor:'#20c997',downColor:'#ff5b6e',borderUpColor:'#20c997',borderDownColor:'#ff5b6e',wickUpColor:'#20c997',wickDownColor:'#ff5b6e'});new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth})).observe($('chart'));$('fit').onclick=()=>chart.timeScale().fitContent();
-$('fullscreen').onclick=async()=>{const box=$('chart').parentElement;if(!document.fullscreenElement){if(box.requestFullscreen)await box.requestFullscreen();}else if(document.exitFullscreen)await document.exitFullscreen();setTimeout(()=>chart.applyOptions({width:$('chart').clientWidth,height:document.fullscreenElement?window.innerHeight-100:($('chart').clientHeight)}),250)};
-document.addEventListener('fullscreenchange',()=>setTimeout(()=>chart.applyOptions({width:$('chart').clientWidth}),150));
-function ema(a,p){if(!a.length)return[];let k=2/(p+1),out=[a[0]];for(let i=1;i<a.length;i++)out.push(a[i]*k+out[i-1]*(1-k));return out}
-function analyze(cs){if(cs.length<20){$('setup').textContent='WAIT · insufficient candles';return}let closes=cs.map(x=>x.close),e20=ema(closes,20),e50=ema(closes,50),last=cs.at(-1),prev=cs.at(-2),atr=cs.slice(-14).reduce((s,c,i,a)=>s+(i?Math.max(c.high-c.low,Math.abs(c.high-a[i-1].close),Math.abs(c.low-a[i-1].close)):c.high-c.low),0)/14;
-let sup=Math.min(...cs.slice(-30).map(c=>c.low)),res=Math.max(...cs.slice(-30).map(c=>c.high));$('support').textContent=fmt(sup);$('resistance').textContent=fmt(res);$('trend').textContent=e20.at(-1)>e50.at(-1)?'BULLISH':'BEARISH';$('trend').className=e20.at(-1)>e50.at(-1)?'green':'red';let signal=last.close>e20.at(-1)&&e20.at(-1)>=e50.at(-1)&&last.close>prev.high?'BUY':last.close<e20.at(-1)&&e20.at(-1)<=e50.at(-1)&&last.close<prev.low?'SELL':'WAIT';$('setup').textContent=signal;$ ('pattern').textContent=pattern(last,prev);let sl=signal==='BUY'?last.close-atr:signal==='SELL'?last.close+atr:last.close;$('risk').textContent=fmt(sl)+' / '+fmt(signal==='BUY'?last.close+atr:last.close-atr)+' · '+fmt(signal==='BUY'?last.close+2*atr:last.close-2*atr);
-let sigs=[];for(let i=1;i<cs.length;i++){if(closes[i]>e20[i]&&e20[i]>=e50[i]&&closes[i]>cs[i-1].high)sigs.push({time:cs[i].time,position:'belowBar',color:'#20c997',shape:'arrowUp',text:'BUY'});else if(closes[i]<e20[i]&&e20[i]<=e50[i]&&closes[i]<cs[i-1].low)sigs.push({time:cs[i].time,position:'aboveBar',color:'#ff5b6e',shape:'arrowDown',text:'SELL'})}markers=sigs;series.setMarkers(sigs);$('count').textContent=sigs.filter(x=>x.text==='BUY').length+' / '+sigs.filter(x=>x.text==='SELL').length;$('signals').innerHTML=sigs.slice(-30).reverse().map(x=>`<div class="signalrow ${x.text==='BUY'?'green':'red'}">${x.text} · ${new Date(x.time*1000).toLocaleString('en-IN')}</div>`).join('')||'No historical signals in loaded candles';let trades=0,wins=0,net=0,entry=null;for(let s of sigs){let c=cs.find(x=>x.time===s.time);if(!c)continue;if(entry){let r=(c.close-entry.price)*(entry.side==='BUY'?1:-1)/atr;net+=r;trades++;if(r>0)wins++;entry=null}else entry={price:c.close,side:s.text}}$('trades').textContent=trades;$('win').textContent=trades?Math.round(wins/trades*100)+'%':'—';$('netr').textContent=trades?net.toFixed(2)+'R':'—';
-if(supportLine)series.removePriceLine(supportLine);if(resistanceLine)series.removePriceLine(resistanceLine);supportLine=series.createPriceLine({price:sup,color:'#55aaff',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Support'});resistanceLine=series.createPriceLine({price:res,color:'#ffad42',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Resistance'});}
-function pattern(c,p){let body=Math.abs(c.close-c.open),range=c.high-c.low||.0001,lower=Math.min(c.open,c.close)-c.low,upper=c.high-Math.max(c.open,c.close);if(body/range<.1)return'Doji';if(lower>body*2&&upper<body)return'Hammer';if(upper>body*2&&lower<body)return'Shooting Star';if(c.close>c.open&&p.close<p.open&&c.close>p.open&&c.open<p.close)return'Bullish Engulfing';if(c.close<c.open&&p.close>p.open&&c.open>p.close&&c.close<p.open)return'Bearish Engulfing';return'—'}
-async function load(){ $('feed').textContent='Refreshing…';$('feedstat').textContent='Loading';$('diag').textContent='Requesting '+symbol+' candles…';try{let days=tf==='1h'?15:5;let r=await fetch(`${API}/api/candles?symbol=${encodeURIComponent(symbol)}&days=${days}&interval=${tf}`,{cache:'no-store'});let j=await r.json();if(!r.ok)throw Error(j.detail||'API error');candles=(j.candles||[]).map(a=>({time:Math.floor(new Date(a[0]).getTime()/1000),open:+a[1],high:+a[2],low:+a[3],close:+a[4]})).filter(c=>[c.time,c.open,c.high,c.low,c.close].every(Number.isFinite));if(!candles.length)throw Error('No candle rows');series.setData(candles);if(!window.didFit){chart.timeScale().fitContent();window.didFit=true}analyze(candles);let last=candles.at(-1);$('price').textContent=fmt(last.close);$('title').textContent=symbol+' · '+(j.source||'Yahoo Finance');$('stamp').textContent='Last candle: '+new Date(last.time*1000).toLocaleString('en-IN');$('feed').textContent='Data received · auto 5s';$('feedstat').textContent='Available';$('diag').textContent=`Backend OK · ${j.count||candles.length} candles · source: ${j.source||'unknown'} · timestamp: ${j.last_timestamp||'—'}`;}catch(e){$('feed').textContent='Feed unavailable';$('feedstat').textContent='Unavailable';$('diag').textContent=e.message;}}
-$('refresh').onclick=load;document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{tf=b.dataset.tf;$('tfstat').textContent=tf.toUpperCase();document.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('active',x===b));window.didFit=false;load()});$('market').onchange=()=>{symbol=$('market').value;$('stock').value='';window.didFit=false;load()};$('loadStock').onclick=()=>{let s=$('stock').value.trim().toUpperCase().replace(/\.NS$/,'');if(!s)return;symbol=s;window.didFit=false;load()};$('stock').onkeydown=e=>{if(e.key==='Enter') $('loadStock').click()};
-fetch('/api/status').then(r=>r.json()).then(j=>{$('diag').textContent='Backend: '+j.backend+' · '+j.data_provider+' · '+(j.note||'');}).catch(()=>{});load();setInterval(load,5000);
-</script></body></html>
+const API='', tfDefault='15m';
+let tf=tfDefault,symbol='NIFTY 50',candles=[],chart,series,supportLine,resistanceLine,refreshTimer=null;
+const $=id=>document.getElementById(id);
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
+chart=LightweightCharts.createChart($('chart'),{
+ layout:{background:{color:'#121a2e'},textColor:'#dbe6ff'},
+ grid:{vertLines:{color:'#1d2940'},horzLines:{color:'#1d2940'}},
+ rightPriceScale:{borderColor:'#34435f'},
+ timeScale:{borderColor:'#34435f',timeVisible:true,secondsVisible:false},
+ crosshair:{mode:1},
+ handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true},
+ handleScale:{mouseWheel:true,pinch:true}
+});
+series=chart.addCandlestickSeries({upColor:'#20c997',downColor:'#ff5b6e',borderUpColor:'#20c997',borderDownColor:'#ff5b6e',wickUpColor:'#20c997',wickDownColor:'#ff5b6e'});
+new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth})).observe($('chart'));
+$('fit').onclick=()=>chart.timeScale().fitContent();
+
+function ema(a,p){if(!a.length)return[];const k=2/(p+1),out=[a[0]];for(let i=1;i<a.length;i++)out.push(a[i]*k+out[i-1]*(1-k));return out}
+function candleATR(cs,idx,period=14){
+ const start=Math.max(1,idx-period+1);let sum=0,n=0;
+ for(let i=start;i<=idx;i++){const c=cs[i],p=cs[i-1];sum+=Math.max(c.high-c.low,Math.abs(c.high-p.close),Math.abs(c.low-p.close));n++}
+ if(!n&&cs[idx])return cs[idx].high-cs[idx].low;
+ return n?sum/n:0;
+}
+function pattern(c,p){
+ const body=Math.abs(c.close-c.open),range=Math.max(c.high-c.low,.0001);
+ const lower=Math.min(c.open,c.close)-c.low,upper=c.high-Math.max(c.open,c.close);
+ if(body/range<.1)return'Doji';
+ if(lower>body*2&&upper<body)return'Hammer';
+ if(upper>body*2&&lower<body)return'Shooting Star';
+ if(c.close>c.open&&p.close<p.open&&c.close>p.open&&c.open<p.close)return'Bullish Engulfing';
+ if(c.close<c.open&&p.close>p.open&&c.open>p.close&&c.close<p.open)return'Bearish Engulfing';
+ return'—';
+}
+/*
+Signal model (confirmed candle-close rules):
+1 = close breaks prior 10-bar swing level with EMA trend and body/momentum confirmation.
+2 = retest of last broken level, followed by close back in breakout direction.
+3 = continuation candle with trend alignment and ATR/body strength.
+Only one signal is emitted per phase; cooldown prevents noisy duplicates.
+*/
+function buildSignals(cs){
+ const n=cs.length, out=[];
+ if(n<25)return out;
+ const closes=cs.map(c=>c.close),e20=ema(closes,20),e50=ema(closes,50);
+ let phase='FLAT',brokenLevel=null,lastSignalIndex=-99;
+ const cooldown=3;
+ for(let i=20;i<n;i++){
+   const c=cs[i],p=cs[i-1],atr=candleATR(cs,i);
+   if(!atr||!Number.isFinite(atr))continue;
+   const prior=cs.slice(Math.max(0,i-10),i);
+   const swingHigh=Math.max(...prior.map(x=>x.high));
+   const swingLow=Math.min(...prior.map(x=>x.low));
+   const bullish=e20[i]>e50[i]&&c.close>e20[i];
+   const bearish=e20[i]<e50[i]&&c.close<e20[i];
+   const strongBody=Math.abs(c.close-c.open)>=atr*.45;
+   const bullBreak=bullish&&c.close>swingHigh&&c.close>c.open&&strongBody;
+   const bearBreak=bearish&&c.close<swingLow&&c.close<c.open&&strongBody;
+   if(i-lastSignalIndex<cooldown)continue;
+   if(phase!=='LONG'&&bullBreak){
+     out.push({time:c.time,position:'belowBar',color:'#20c997',shape:'arrowUp',text:'BUY 1',side:'BUY',level:swingHigh,idx:i});
+     phase='LONG';brokenLevel=swingHigh;lastSignalIndex=i;continue;
+   }
+   if(phase==='LONG'&&brokenLevel!==null){
+     const retest=c.low<=brokenLevel+atr*.25&&c.close>brokenLevel&&c.close>c.open&&bullish;
+     const continuation=bullish&&c.close>p.high&&Math.abs(c.close-c.open)>=atr*.7;
+     if(retest){
+       out.push({time:c.time,position:'belowBar',color:'#65e6b5',shape:'circle',text:'BUY 2',side:'BUY',level:brokenLevel,idx:i});
+       phase='LONG_RETESTED';lastSignalIndex=i;continue;
+     }
+     if(phase==='LONG_RETESTED'&&continuation){
+       out.push({time:c.time,position:'belowBar',color:'#20c997',shape:'arrowUp',text:'BUY 3',side:'BUY',level:brokenLevel,idx:i});
+       phase='LONG_CONFIRMED';lastSignalIndex=i;continue;
+     }
+   }
+   if(phase!=='SHORT'&&bearBreak){
+     out.push({time:c.time,position:'aboveBar',color:'#ff5b6e',shape:'arrowDown',text:'SELL 1',side:'SELL',level:swingLow,idx:i});
+     phase='SHORT';brokenLevel=swingLow;lastSignalIndex=i;continue;
+   }
+   if(phase==='SHORT'&&brokenLevel!==null){
+     const retest=c.high>=brokenLevel-atr*.25&&c.close<brokenLevel&&c.close<c.open&&bearish;
+     const continuation=bearish&&c.close<p.low&&Math.abs(c.close-c.open)>=atr*.7;
+     if(retest){
+       out.push({time:c.time,position:'aboveBar',color:'#ff9aa5',shape:'circle',text:'SELL 2',side:'SELL',level:brokenLevel,idx:i});
+       phase='SHORT_RETESTED';lastSignalIndex=i;continue;
+     }
+     if(phase==='SHORT_RETESTED'&&continuation){
+       out.push({time:c.time,position:'aboveBar',color:'#ff5b6e',shape:'arrowDown',text:'SELL 3',side:'SELL',level:brokenLevel,idx:i});
+       phase='SHORT_CONFIRMED';lastSignalIndex=i;continue;
+     }
+   }
+   // Opposite confirmed break resets the current directional sequence.
+   if(bearBreak&&phase.startsWith('LONG')){phase='FLAT';brokenLevel=null}
+   if(bullBreak&&phase.startsWith('SHORT')){phase='FLAT';brokenLevel=null}
+ }
+ return out;
+}
+function analyze(cs){
+ if(cs.length<25){$('setup').textContent='WAIT · insufficient candles';return}
+ const closes=cs.map(x=>x.close),e20=ema(closes,20),e50=ema(closes,50),last=cs.at(-1),prev=cs.at(-2);
+ const atr=candleATR(cs,cs.length-1),tail=cs.slice(-30);
+ const sup=Math.min(...tail.map(c=>c.low)),res=Math.max(...tail.map(c=>c.high));
+ $('support').textContent=fmt(sup);$('resistance').textContent=fmt(res);
+ const bullish=e20.at(-1)>e50.at(-1),bearish=e20.at(-1)<e50.at(-1);
+ $('trend').textContent=bullish?'BULLISH':bearish?'BEARISH':'SIDEWAYS';$('trend').className=bullish?'green':bearish?'red':'';
+ const hist=buildSignals(cs),latest=hist.filter(x=>x.idx===cs.length-1).at(-1);
+ $('setup').textContent=latest?latest.text:(bullish?'WAIT · bullish trend':bearish?'WAIT · bearish trend':'WAIT · sideways');
+ $('pattern').textContent=pattern(last,prev);
+ const latestSide=latest?.side,sl=latestSide==='BUY'?last.close-atr:latestSide==='SELL'?last.close+atr:last.close;
+ $('risk').textContent=fmt(sl)+' / '+fmt(latestSide==='BUY'?last.close+atr:latestSide==='SELL'?last.close-atr:last.close)+' · '+fmt(latestSide==='BUY'?last.close+2*atr:latestSide==='SELL'?last.close-2*atr:last.close);
+ series.setMarkers(hist.map(({time,position,color,shape,text})=>({time,position,color,shape,text})));
+ const buys=hist.filter(x=>x.side==='BUY').length,sells=hist.filter(x=>x.side==='SELL').length;
+ $('count').textContent=buys+' / '+sells;
+ $('signals').innerHTML=hist.slice(-40).reverse().map(x=>`<div class="signalrow ${x.side==='BUY'?'green':'red'}">${x.text} · ${new Date(x.time*1000).toLocaleString('en-IN')}</div>`).join('')||'No confirmed historical setups in loaded candles';
+ let trades=0,wins=0,net=0,entry=null;
+ for(const s of hist){const c=cs[s.idx];if(!c)continue;
+   if(entry){const r=(c.close-entry.price)*(entry.side==='BUY'?1:-1)/(entry.atr||atr||1);net+=r;trades++;if(r>0)wins++;entry=null}
+   else entry={price:c.close,side:s.side,atr:candleATR(cs,s.idx)};
+ }
+ $('trades').textContent=trades;$('win').textContent=trades?Math.round(wins/trades*100)+'%':'—';$('netr').textContent=trades?net.toFixed(2)+'R':'—';
+ if(supportLine)series.removePriceLine(supportLine);if(resistanceLine)series.removePriceLine(resistanceLine);
+ supportLine=series.createPriceLine({price:sup,color:'#55aaff',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Support'});
+ resistanceLine=series.createPriceLine({price:res,color:'#ffad42',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Resistance'});
+}
+let loading=false;
+async function load(){
+ if(loading)return;loading=true;
+ $('feed').textContent='Refreshing…';$('feedstat').textContent='Loading';$('diag').textContent='Requesting '+symbol+' candles…';
+ try{
+  const days=tf==='1h'?15:5;
+  const r=await fetch(`${API}/api/candles?symbol=${encodeURIComponent(symbol)}&days=${days}&interval=${tf}`,{cache:'no-store'});
+  const j=await r.json();if(!r.ok)throw Error(j.detail||'API error');
+  const fresh=(j.candles||[]).map(a=>({time:Math.floor(new Date(a[0]).getTime()/1000),open:+a[1],high:+a[2],low:+a[3],close:+a[4]}))
+    .filter(c=>[c.time,c.open,c.high,c.low,c.close].every(Number.isFinite)&&c.high>=c.low&&c.high>=Math.max(c.open,c.close)&&c.low<=Math.min(c.open,c.close));
+  if(!fresh.length)throw Error('No candle rows');
+  candles=fresh;series.setData(candles);
+  if(!window.didFit){chart.timeScale().fitContent();window.didFit=true}
+  analyze(candles);
+  const last=candles.at(-1);$('price').textContent=fmt(last.close);$('title').textContent=symbol+' · '+(j.source||'Yahoo Finance');
+  $('stamp').textContent='Last candle: '+new Date(last.time*1000).toLocaleString('en-IN');
+  $('feed').textContent='Data received';$('feedstat').textContent='Available';
+  $('diag').textContent=`Backend OK · ${j.count||candles.length} candles · source: ${j.source||'unknown'} · timestamp: ${j.last_timestamp||'—'}`;
+ }catch(e){$('feed').textContent='Feed unavailable';$('feedstat').textContent='Unavailable';$('diag').textContent=e.message}
+ finally{loading=false}
+}
+$('refresh').onclick=load;
+document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{tf=b.dataset.tf;$('tfstat').textContent=tf.toUpperCase();document.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('active',x===b));window.didFit=false;load()});
+$('market').onchange=()=>{symbol=$('market').value;$('stock').value='';window.didFit=false;load()};
+$('loadStock').onclick=()=>{const s=$('stock').value.trim().toUpperCase().replace(/\.NS$/,'');if(!s)return;symbol=s+'.NS';window.didFit=false;load()};
+$('stock').onkeydown=e=>{if(e.key==='Enter') $('loadStock').click()};
+fetch('/api/status').then(r=>r.json()).then(j=>{$('diag').textContent='Backend: '+j.backend+' · '+j.data_provider+' · '+(j.note||'')}).catch(()=>{});
+load();setInterval(load,5000);
+</script>
+</body>
+</html>
