@@ -127,37 +127,42 @@ Historical signal rules:
 */
 function buildSignals(cs){
  const n=cs.length,out=[];
- if(n<55)return out;
- const closes=cs.map(c=>c.close),e20=ema(closes,20),e50=ema(closes,50);
- let lastSignalIndex=-100,lastSide='';
- const cooldown=4;
- for(let i=50;i<n-1;i++){ // skip latest potentially incomplete candle
-  const c=cs[i],atr=candleATR(cs,i);
+ if(n<30)return out;
+ const closes=cs.map(c=>c.close),e9=ema(closes,9),e20=ema(closes,20),e50=ema(closes,50);
+ let lastIndex=-100,lastSide='';
+ const cooldown=5;
+ for(let i=25;i<n-1;i++){ // completed candles only
+  const c=cs[i],p=cs[i-1],atr=candleATR(cs,i);
   if(!atr||!Number.isFinite(atr))continue;
-  const prior=cs.slice(i-10,i);
-  const swingHigh=Math.max(...prior.map(x=>x.high));
-  const swingLow=Math.min(...prior.map(x=>x.low));
+  const prev=cs.slice(i-5,i);
+  const hi=Math.max(...prev.map(x=>x.high)),lo=Math.min(...prev.map(x=>x.low));
+  const crossUp=e9[i]>e20[i]&&e9[i-1]<=e20[i-1];
+  const crossDown=e9[i]<e20[i]&&e9[i-1]>=e20[i-1];
   const bullish=e20[i]>e50[i]&&c.close>e20[i];
   const bearish=e20[i]<e50[i]&&c.close<e20[i];
-  const strong=Math.abs(c.close-c.open)>=atr*.35;
-  const bullBreak=bullish&&c.close>swingHigh&&c.close>c.open&&strong;
-  const bearBreak=bearish&&c.close<swingLow&&c.close<c.open&&strong;
-  if(i-lastSignalIndex<cooldown)continue;
-  let side='',text='',reason='';
-  if(bullBreak&&lastSide!=='BUY'){side='BUY';text='BUY';reason='10-candle breakout + EMA trend'}
-  else if(bearBreak&&lastSide!=='SELL'){side='SELL';text='SELL';reason='10-candle breakdown + EMA trend'}
-  if(!side)continue;
+  const pat=pattern(c,p);
+  const bullPattern=['Hammer','Bullish Engulfing'].includes(pat);
+  const bearPattern=['Shooting Star','Bearish Engulfing'].includes(pat);
+  const bullBreak=c.close>hi&&c.close>c.open;
+  const bearBreak=c.close<lo&&c.close<c.open;
+  let side='',reason='';
+  // Signal on crossover, confirmed breakout, or reversal pattern with trend/momentum confirmation.
+  if(crossUp|| (bullBreak&&bullish) || (bullPattern&&c.close>e20[i]&&e20[i]>=e20[i-1])){
+    side='BUY'; reason=crossUp?'EMA 9/20 bullish crossover':bullBreak?'5-candle breakout + EMA trend':pat+' + bullish EMA trend';
+  } else if(crossDown|| (bearBreak&&bearish) || (bearPattern&&c.close<e20[i]&&e20[i]<=e20[i-1])){
+    side='SELL'; reason=crossDown?'EMA 9/20 bearish crossover':bearBreak?'5-candle breakdown + EMA trend':pat+' + bearish EMA trend';
+  }
+  if(!side||i-lastIndex<cooldown||side===lastSide)continue;
   const sl=side==='BUY'?c.close-atr*1.2:c.close+atr*1.2;
   const t1=side==='BUY'?c.close+atr*1.5:c.close-atr*1.5;
   const t2=side==='BUY'?c.close+atr*2.5:c.close-atr*2.5;
   out.push({time:c.time,position:side==='BUY'?'belowBar':'aboveBar',
    color:side==='BUY'?'#20c997':'#ff5b6e',shape:side==='BUY'?'arrowUp':'arrowDown',
-   text,side,reason,price:c.close,sl,t1,t2,idx:i});
-  lastSignalIndex=i;lastSide=side;
+   text:side==='BUY'?'▲ BUY':'▼ SELL',side,reason,price:c.close,sl,t1,t2,idx:i});
+  lastIndex=i;lastSide=side;
  }
  return out;
 }
-
 function analyze(cs){
  if(cs.length<55){
   $('setup').textContent='WAIT · need more candles';
