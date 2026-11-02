@@ -175,7 +175,20 @@ function analyze(cs){
  const hist=buildSignals(cs),latest=hist.at(-1);
  $('setup').textContent=latest?latest.side+' · '+latest.reason:(bullish?'WAIT · bullish trend':bearish?'WAIT · bearish trend':'WAIT · sideways');
  $('risk').textContent=latest?`SL ${fmt(latest.sl)} / T1 ${fmt(latest.t1)} / T2 ${fmt(latest.t2)}`:'Waiting for confirmed signal';
- series.setMarkers(hist.map(({time,position,color,shape,text})=>({time,position,color,shape,text})));
+ // Markers must use the exact candle timestamp from the chart data.
+ const markerData=hist
+   .filter(s=>Number.isInteger(s.idx)&&cs[s.idx])
+   .map(s=>({
+     time:cs[s.idx].time,
+     position:s.side==='BUY'?'belowBar':'aboveBar',
+     color:s.side==='BUY'?'#20c997':'#ff5b6e',
+     shape:s.side==='BUY'?'arrowUp':'arrowDown',
+     text:s.side,
+     size:2
+   }))
+   .sort((a,b)=>a.time-b.time);
+ series.setMarkers(markerData);
+ console.log('UEP chart markers:',markerData.length,markerData.slice(-5));
  const buys=hist.filter(x=>x.side==='BUY').length,sells=hist.filter(x=>x.side==='SELL').length;
  $('count').textContent=buys+' / '+sells;
  $('signalcount').textContent=hist.length;
