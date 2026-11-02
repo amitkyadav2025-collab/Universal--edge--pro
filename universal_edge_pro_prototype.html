@@ -73,7 +73,7 @@ select,input,button{background:#17223a;color:var(--text);border:1px solid #34435
 
 <script>
 const API='';
-let tf='15m',symbol='NIFTY 50',candles=[],chart,series,supportLine=null,resistanceLine=null,refreshTimer=null,loading=false;
+let tf='15m',symbol='NIFTY 50',candles=[],chart,series,supportLine=null,resistanceLine=null,signalPriceLines=[],refreshTimer=null,loading=false;
 const $=id=>document.getElementById(id);
 const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
 
@@ -188,14 +188,23 @@ function analyze(cs){
    }))
    .sort((a,b)=>a.time-b.time);
  try {
-   series.setMarkers([]);
    series.setMarkers(markerData);
-   // Keep the plotted candle range and marker range aligned.
-   if(markerData.length){
-     const first=Math.min(candles[0].time,markerData[0].time);
-     const last=Math.max(candles[candles.length-1].time,markerData[markerData.length-1].time);
-     chart.timeScale().setVisibleRange({from:first,to:last});
-   }
+   // Draw labeled price levels too: markers alone can be clipped outside
+   // the candle autoscale range on mobile.
+   signalPriceLines.forEach(line=>{try{series.removePriceLine(line)}catch(e){}});
+   signalPriceLines=[];
+   hist.slice(-12).forEach(sig=>{
+     const line=series.createPriceLine({
+       price:Number(sig.price),
+       color:sig.side==='BUY'?'#20c997':'#ff5b6e',
+       lineWidth:2,
+       lineStyle:2,
+       axisLabelVisible:true,
+       title:sig.side==='BUY'?'▲ BUY':'▼ SELL'
+     });
+     signalPriceLines.push(line);
+   });
+   chart.timeScale().fitContent();
  } catch(markerErr) {
    console.error('Marker rendering failed:',markerErr);
  }
